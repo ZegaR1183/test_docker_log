@@ -1,0 +1,9 @@
+FROM nginx:alpine
+
+# Удаляем дефолтный конфиг
+RUN rm -rf /etc/nginx/conf.d/default.conf
+
+# Копируем кастомный конфиг
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80

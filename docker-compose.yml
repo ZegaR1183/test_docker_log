@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:18.3
+    container_name: metro_postgres_test
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    build: .
+    container_name: metro_app_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    volumes:
+      - ./temp:/app/temp
+      - ./logs:/app/logs
+      - ./output_files:/app/output_files
+      - ./output_files:/usr/share/nginx/html
+      - ./input_file:/app/input_file
+    working_dir: /app
+    command: python log.py
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.static
+    container_name: metro_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./output_files:/usr/share/nginx/html
+    command: nginx -g 'daemon off;'
+    networks:
+      - default
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+
+
+#**Запуск:**
+#docker-compose up -d
+
+#**Остановка:**
+#docker-compose down
+
+#**Пересборка (после изменений в коде):**
+#docker-compose up --build -d
+
+#**Полный сброс (удалить всё):**
+#docker-compose down -v --rmi local
+
+#**Просмотр логов:**
+#docker-compose logs -f app
