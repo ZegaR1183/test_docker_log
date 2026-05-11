@@ -18,7 +18,6 @@ LOG_FILE = f"{LOG_DIR}/app.log"
 OUT_DIR = "./output_files"
 IN_DIR = "./input_file"
 
-
 # Создаём директорию для логов и файла excel, если нет
 os.makedirs(LOG_DIR, exist_ok=True)
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -39,14 +38,6 @@ LOG_FILE_IN = f"{IN_DIR}/result_output"
 LOG_FILE_OUT = "./temp/clear_log.txt"
 DATA_FILE_OUT = "./temp/dict_all.txt"
 
-# Проверяем наличие .env файла перед загрузкой
-if os.path.exists('.env'):
-    load_dotenv()
-    logger.info("Переменные окружения загружены из .env")
-else:
-    logger.info("Файл .env не найден, используются переменные окружения из docker-compose")
-
-
 # Количество полей для разных типов устройств
 FIELDS_MX = 12
 FIELDS_ACX_4000 = 8
@@ -62,6 +53,13 @@ KEYS_MX = ['name', 'type', 'temp PEM_0', 'temp PEM_1', 'temp RE_0', 'temp RE_1',
 KEYS_ACX_4000 = ['name', 'type', 'temp PEM_0', 'temp PEM_1', 'temp RE_0', 's_fan_1', 's_fan_2', 'date']
 KEYS_ACX_2100 = ['name', 'type', 'temp RE_0', 'date']
 
+# Проверяем наличие .env файла перед загрузкой
+if os.path.exists('.env'):
+    load_dotenv()
+    logger.info("Переменные окружения загружены из .env")
+else:
+    logger.info("Файл .env не найден, используются переменные окружения из docker-compose")
+
 # Загрузка конфигурации из переменных окружения
 def load_db_config() -> Dict[str, str]:
     """Загружает конфигурацию БД из переменных окружения."""
@@ -69,8 +67,8 @@ def load_db_config() -> Dict[str, str]:
         'dbname': os.getenv('POSTGRES_DB'),
         'user': os.getenv('POSTGRES_USER'),
         'password': os.getenv('POSTGRES_PASSWORD'),
-        'host': os.getenv('POSTGRES_HOST'),
-        'port': os.getenv('POSTGRES_PORT')
+        'host': os.getenv('POSTGRES_HOST', 'postgres'),
+        'port': int(os.getenv('POSTGRES_PORT', 5432))
     }
 
     # Если пароль не передан - ошибка
@@ -341,8 +339,8 @@ def save_to_excel_sheets(df: pd.DataFrame, analysis_results: dict) -> None:
         logger.info(f"Данные сохранены в {output_file}")
     except Exception as e:
         logger.error(f"Ошибка при сохранении в Excel: {e}")
-        logger.error(f"Stack trace:\n{traceback.format_exc()}")  # 🔥 Важно!
-        raise  # 🔥 Прервать выполнение, чтобы увидеть ошибку
+        logger.error(f"Stack trace:\n{traceback.format_exc()}")
+        raise  # Прервать выполнение, чтобы увидеть ошибку
 
 if __name__ == "__main__":
     logger.info("Запуск скрипта")

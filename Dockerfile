@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-LABEL maintainer=Evgeniy_Raikhin
+LABEL maintainer="Evgeniy_Raikhin"
 
 WORKDIR /app
 
