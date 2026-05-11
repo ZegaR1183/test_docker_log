@@ -2,15 +2,13 @@ import os
 import logging
 from dotenv import load_dotenv
 import traceback
-
-# Загружаем переменные из .env файла
-load_dotenv()
 import pandas as pd
 from datetime import datetime
 from typing import List, Dict, Any, Optional
 import psycopg2
 from sqlalchemy import create_engine
 from openpyxl import styles
+import sys
 
 
 # Настройка логирования и вывода в файл
@@ -41,6 +39,14 @@ LOG_FILE_IN = f"{IN_DIR}/result_output"
 LOG_FILE_OUT = "./temp/clear_log.txt"
 DATA_FILE_OUT = "./temp/dict_all.txt"
 
+# Проверяем наличие .env файла перед загрузкой
+if os.path.exists('.env'):
+    load_dotenv()
+    logger.info("Переменные окружения загружены из .env")
+else:
+    logger.info("Файл .env не найден, используются переменные окружения из docker-compose")
+
+
 # Количество полей для разных типов устройств
 FIELDS_MX = 12
 FIELDS_ACX_4000 = 8
@@ -60,11 +66,11 @@ KEYS_ACX_2100 = ['name', 'type', 'temp RE_0', 'date']
 def load_db_config() -> Dict[str, str]:
     """Загружает конфигурацию БД из переменных окружения."""
     db_config = {
-        'dbname': os.getenv('POSTGRES_DB', 'postgres'),
-        'user': os.getenv('POSTGRES_USER', 'postgres'),
-        'password': os.getenv('POSTGRES_PASSWORD', ''),
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'port': os.getenv('DB_PORT', '5432')
+        'dbname': os.getenv('POSTGRES_DB'),
+        'user': os.getenv('POSTGRES_USER'),
+        'password': os.getenv('POSTGRES_PASSWORD'),
+        'host': os.getenv('POSTGRES_HOST'),
+        'port': os.getenv('POSTGRES_PORT')
     }
 
     # Если пароль не передан - ошибка
@@ -350,7 +356,7 @@ if __name__ == "__main__":
 
     if not data:
         logger.warning("Нет данных для обработки.")
-        exit()
+        sys.exit(0)
 
     df = create_df(data)
 
